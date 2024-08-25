@@ -1,0 +1,11 @@
+repos:
+  - repo: https://github.com/segmentio/golines
+    rev: v0.12.2
+    hooks:
+      - id: golines
+        args: [--base-formatter=gofmt --max-len=120 --no-reformat-tags]
+  - repo: https://github.com/Bahjat/pre-commit-golang
+    rev: v1.0.2
+    hooks:
+      - id: go-fmt-import
+      - id: gofumpt
