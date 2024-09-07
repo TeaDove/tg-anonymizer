@@ -121,6 +121,65 @@ func (r *Service) handlePrivateMessageCommandStart(
 	return nil
 }
 
+func (r *Service) forward(update *tgbotapi.Update, chatId int64) error {
+	var err error
+
+	if update.Message.Sticker != nil {
+		msg := tgbotapi.NewSticker(chatId, tgbotapi.FileID(update.Message.Sticker.FileID))
+
+		_, err = r.bot.Send(msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+
+		return nil
+	}
+
+	if update.Message.Text != "" {
+		msg := tgbotapi.NewMessage(chatId, update.Message.Text)
+
+		_, err = r.bot.Send(msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+
+		return nil
+	}
+
+	if update.Message.Video != nil {
+		msg := tgbotapi.NewVideo(chatId, tgbotapi.FileID(update.Message.Video.FileID))
+		msg.Caption = update.Message.Caption
+
+		_, err = r.bot.Send(msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+
+		return nil
+	}
+
+	if update.Message.Photo != nil {
+		for _, photo := range update.Message.Photo {
+			msg := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(photo.FileID))
+			msg.Caption = update.Message.Caption
+
+			_, err = r.bot.Send(msg)
+			if err != nil {
+				return errors.Wrap(err, "failed to send message")
+			}
+		}
+
+		return nil
+	}
+
+	err = r.reply(update, "I currently only support stickers, photos, videos and regular messages")
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
 func (r *Service) handlePrivateMessageForward(ctx context.Context, update *tgbotapi.Update) error {
 	userId := update.Message.From.ID
 
@@ -138,11 +197,9 @@ func (r *Service) handlePrivateMessageForward(ctx context.Context, update *tgbot
 		Str("text", redact_utils.RedactWithPrefix(update.Message.Text)).
 		Msg("sending.anon.message")
 
-	msg := tgbotapi.NewMessage(chatId, update.Message.Text)
-
-	_, err = r.bot.Send(msg)
+	err = r.forward(update, chatId)
 	if err != nil {
-		return errors.Wrap(err, "failed to send message")
+		return errors.Wrap(err, "failed to forward")
 	}
 
 	return nil

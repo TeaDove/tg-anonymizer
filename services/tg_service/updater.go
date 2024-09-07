@@ -21,7 +21,7 @@ func (r *Service) PollerRun(ctx context.Context) {
 
 	for update := range updates {
 		wg.Add(1)
-		go must_utils.DoOrLog(
+		go must_utils.DoOrLogWithStacktrace(
 			func(ctx context.Context) error {
 				return r.processUpdate(ctx, &wg, &update)
 			},
@@ -87,7 +87,7 @@ func (r *Service) processUpdate(
 
 		if update.Message.Chat.Type == "private" {
 			wg.Add(1)
-			go must_utils.DoOrLog(
+			go must_utils.DoOrLogWithStacktrace(
 				func(ctx context.Context) error {
 					return r.handlePrivateMessage(ctx, wg, update)
 				},
@@ -97,7 +97,7 @@ func (r *Service) processUpdate(
 
 		if update.Message.Chat.Type == "group" || update.Message.Chat.Type == "supergroup" {
 			wg.Add(1)
-			go must_utils.DoOrLog(
+			go must_utils.DoOrLogWithStacktrace(
 				func(ctx context.Context) error {
 					return r.handleGroupMessage(ctx, wg, update)
 				},
