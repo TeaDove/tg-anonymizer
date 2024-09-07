@@ -3,6 +3,8 @@ package entrypoints
 import (
 	"context"
 
+	"tg-anonymizer/infrastructure/ydb_inrastructure"
+	"tg-anonymizer/repositories/user_chat_repository"
 	"tg-anonymizer/services/tg_service"
 	"tg-anonymizer/utils/settings"
 
@@ -20,7 +22,17 @@ func MakeTgService(ctx context.Context) (*tg_service.Service, error) {
 	bot.Debug = false
 	zerolog.Ctx(ctx).Info().Str("username", bot.Self.UserName).Msg("bot.client.created")
 
-	tgService, err := tg_service.NewService(ctx, bot)
+	ydbDriver, err := ydb_inrastructure.GetGormConnect(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get ydb driver")
+	}
+
+	userToChatRepository, err := user_chat_repository.NewRepository(ctx, ydbDriver)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init user_to_chat_repository")
+	}
+
+	tgService, err := tg_service.NewService(ctx, bot, userToChatRepository)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make service")
 	}

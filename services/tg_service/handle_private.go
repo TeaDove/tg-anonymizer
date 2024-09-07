@@ -1,0 +1,166 @@
+package tg_service
+
+import (
+	"context"
+	"fmt"
+	"strconv"
+	"strings"
+	"sync"
+
+	"tg-anonymizer/repositories/user_chat_repository"
+
+	"github.com/teadove/teasutils/utils/redact_utils"
+
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
+)
+
+func (r *Service) replyWithAvailableChats(ctx context.Context, update *tgbotapi.Update) error {
+	chats, err := r.userToChatRepository.GetCommonChats(ctx, update.Message.From.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to get common chats")
+	}
+
+	if len(chats) == 0 {
+		err = r.reply(
+			update,
+			"Hi! Add me to <italic>desired</italic> chat and sent any message to this chat!",
+		)
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+
+		return nil
+	}
+
+	text := strings.Builder{}
+	text.WriteString("Available chats to choose:\n\n")
+	for _, chat := range chats {
+		text.WriteString(fmt.Sprintf("<code>%d</code>: %s\n", chat.ChatId, chat.ChatTitle))
+	}
+	text.WriteString(
+		"\nJust pass me ID of chat (number before title, that looks like <code>-1001178533048</code>)",
+	)
+
+	err = r.reply(update, text.String())
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
+func (r *Service) handlePrivateMessageSetChatId(
+	ctx context.Context,
+	update *tgbotapi.Update,
+) error {
+	chatId, err := strconv.ParseInt(update.Message.Text, 10, 64)
+	if err != nil {
+		err = r.replyWithAvailableChats(ctx, update)
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+
+		return nil
+	}
+
+	err = r.userToChatRepository.ActivateUserToChat(ctx, update.Message.From.ID, chatId)
+	if err != nil {
+		if errors.Is(err, user_chat_repository.KeyNotFoundErr) {
+			err = r.reply(update, "Failed to find chat: <code>%d</code>", chatId)
+			if err != nil {
+				return errors.Wrap(err, "failed to send message")
+			}
+			return nil
+		}
+
+		return errors.Wrap(err, "failed to put chatId")
+	}
+
+	err = r.reply(update, "Chat chosen: <code>%d</code>", chatId)
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+	zerolog.Ctx(ctx).Info().Int64("chat_id", chatId).Msg("user.chose.chat")
+
+	return nil
+}
+
+func (r *Service) handlePrivateMessageCommandReset(
+	ctx context.Context,
+	update *tgbotapi.Update,
+) error {
+	err := r.userToChatRepository.DelActiveUserToChat(ctx, update.Message.From.ID)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete chat")
+	}
+
+	err = r.reply(update, "Active chat reset")
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	err = r.replyWithAvailableChats(ctx, update)
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
+func (r *Service) handlePrivateMessageCommandStart(
+	ctx context.Context,
+	update *tgbotapi.Update,
+) error {
+	err := r.replyWithAvailableChats(ctx, update)
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
+func (r *Service) handlePrivateMessageForward(ctx context.Context, update *tgbotapi.Update) error {
+	userId := update.Message.From.ID
+
+	chatId, err := r.userToChatRepository.GetActiveUserToChat(ctx, userId)
+	if err != nil {
+		if errors.Is(err, user_chat_repository.KeyNotFoundErr) {
+			return r.handlePrivateMessageSetChatId(ctx, update)
+		}
+		return errors.Wrap(err, "failed to get chatId")
+	}
+
+	zerolog.Ctx(ctx).
+		Debug().
+		Int64("chatId", chatId).
+		Str("text", redact_utils.RedactWithPrefix(update.Message.Text)).
+		Msg("sending.anon.message")
+
+	msg := tgbotapi.NewMessage(chatId, update.Message.Text)
+
+	_, err = r.bot.Send(msg)
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
+func (r *Service) handlePrivateMessage(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	update *tgbotapi.Update,
+) error {
+	defer wg.Done()
+
+	switch update.Message.Command() {
+	case "reset":
+		return r.handlePrivateMessageCommandReset(ctx, update)
+	case "start":
+		return r.handlePrivateMessageCommandStart(ctx, update)
+	default:
+		return r.handlePrivateMessageForward(ctx, update)
+	}
+}

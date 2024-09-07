@@ -5,7 +5,6 @@ import (
 	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/teadove/teasutils/utils/logger_utils"
 	"github.com/teadove/teasutils/utils/must_utils"
@@ -44,39 +43,36 @@ func (r *Service) processUpdate(
 		}
 
 		if update.Message.Chat != nil {
-			ctx = logger_utils.WithStrContextLog(ctx, "from.chat", update.Message.Chat.Title)
+			ctx = logger_utils.WithStrContextLog(ctx, "from.chat", getMessageChatTitle(update))
 		}
 	}
 
-	zerolog.Ctx(ctx).Debug().Interface("update", update).Msg("tg.new.update")
-
-	if update.Message != nil && update.Message.Chat != nil &&
-		update.Message.Chat.Type == "private" {
-		wg.Add(1)
-		go must_utils.DoOrLog(
-			func(ctx context.Context) error {
-				return r.handlePrivateMessage(ctx, wg, update)
-			},
-			"error.during.processing.private.message",
-		)(ctx)
+	// Log only every 10th update
+	if update.UpdateID%10 == 0 {
+		zerolog.Ctx(ctx).Debug().Interface("update", update).Msg("tg.new.update")
 	}
 
-	return nil
-}
+	if update.Message != nil && update.Message.Chat != nil {
 
-func (r *Service) handlePrivateMessage(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	update *tgbotapi.Update,
-) error {
-	defer wg.Done()
+		if update.Message.Chat.Type == "private" {
+			wg.Add(1)
+			go must_utils.DoOrLog(
+				func(ctx context.Context) error {
+					return r.handlePrivateMessage(ctx, wg, update)
+				},
+				"error.during.processing.private.message",
+			)(ctx)
+		}
 
-	zerolog.Ctx(ctx).Debug().Interface("update", update.Message).Msg("tg.handlePrivateMessage")
-
-	msg := tgbotapi.NewMessage(-1001178533048, update.Message.Text)
-	_, err := r.bot.Send(msg)
-	if err != nil {
-		return errors.Wrap(err, "failed to send message")
+		if update.Message.Chat.Type == "group" || update.Message.Chat.Type == "supergroup" {
+			wg.Add(1)
+			go must_utils.DoOrLog(
+				func(ctx context.Context) error {
+					return r.handleGroupMessage(ctx, wg, update)
+				},
+				"error.during.processing.group.message",
+			)(ctx)
+		}
 	}
 
 	return nil
