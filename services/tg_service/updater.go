@@ -31,9 +31,7 @@ func (r *Service) PollerRun(ctx context.Context) {
 	wg.Wait()
 }
 
-func (r *Service) ProcessWebhook(rw http.ResponseWriter, req *http.Request) {
-	ctx := logger_utils.AddLoggerToCtx(req.Context())
-
+func (r *Service) ProcessWebhook(ctx context.Context, rw http.ResponseWriter, req *http.Request) {
 	var wg sync.WaitGroup
 	for update := range r.bot.ListenForWebhookRespReqFormat(rw, req) {
 		go must_utils.DoOrLog(

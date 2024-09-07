@@ -24,5 +24,12 @@ func init() {
 }
 
 func Handler(rw http.ResponseWriter, req *http.Request) {
-	service.ProcessWebhook(rw, req)
+	ctx := logger_utils.AddLoggerToCtx(req.Context())
+
+	reqId, ok := ctx.Value("lambdaRuntimeRequestID").(string)
+	if ok {
+		ctx = logger_utils.WithStrContextLog(ctx, "request_id", reqId)
+	}
+
+	service.ProcessWebhook(ctx, rw, req)
 }
