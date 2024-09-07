@@ -37,7 +37,7 @@ func (r *Service) ProcessWebhook(ctx context.Context, rw http.ResponseWriter, re
 
 	update, err := r.bot.HandleUpdate(req)
 	if err != nil {
-		zerolog.Ctx(ctx).Error().Stack().Err(err).Msg("failed.to.parse.update")
+		zerolog.Ctx(ctx).Warn().Stack().Err(err).Msg("failed.to.parse.update")
 
 		errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
 		rw.WriteHeader(http.StatusBadRequest)
@@ -50,6 +50,7 @@ func (r *Service) ProcessWebhook(ctx context.Context, rw http.ResponseWriter, re
 		return
 	}
 
+	wg.Add(1)
 	err = r.processUpdate(ctx, &wg, update)
 	if err != nil {
 		zerolog.Ctx(ctx).Error().
