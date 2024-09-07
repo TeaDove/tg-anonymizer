@@ -1,14 +1,14 @@
 module tg-anonymizer
 
-go 1.21
+go 1.23
 
-toolchain go1.21.0
+toolchain go1.23.0
 
 require (
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.33.0
-	github.com/teadove/teasutils v0.1.6
+	github.com/teadove/teasutils v0.1.5
 	github.com/ydb-platform/gorm-driver v0.1.3
 	github.com/ydb-platform/ydb-go-sdk/v3 v3.80.0
 	github.com/ydb-platform/ydb-go-yc v0.12.3
@@ -29,7 +29,7 @@ require (
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/yandex-cloud/go-genproto v0.0.0-20240819112322-98a264d392f6 // indirect
+	github.com/yandex-cloud/go-genproto v0.0.0-20240903084352-17cc86ae897b // indirect
 	github.com/ydb-platform/ydb-go-genproto v0.0.0-20240821162910-6cb364b2ccc8 // indirect
 	github.com/ydb-platform/ydb-go-yc-metadata v0.6.1 // indirect
 	golang.org/x/net v0.29.0 // indirect
