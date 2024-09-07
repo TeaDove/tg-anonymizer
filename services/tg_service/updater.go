@@ -2,6 +2,7 @@ package tg_service
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"sync"
 
@@ -33,13 +34,28 @@ func (r *Service) PollerRun(ctx context.Context) {
 
 func (r *Service) ProcessWebhook(ctx context.Context, rw http.ResponseWriter, req *http.Request) {
 	var wg sync.WaitGroup
-	for update := range r.bot.ListenForWebhookRespReqFormat(rw, req) {
-		go must_utils.DoOrLog(
-			func(ctx context.Context) error {
-				return r.processUpdate(ctx, &wg, &update)
-			},
-			"error.during.update.process",
-		)(ctx)
+
+	update, err := r.bot.HandleUpdate(req)
+	if err != nil {
+		zerolog.Ctx(ctx).Error().Stack().Err(err).Msg("failed.to.parse.update")
+
+		errMsg, _ := json.Marshal(map[string]string{"error": err.Error()})
+		rw.WriteHeader(http.StatusBadRequest)
+		rw.Header().Set("Content-Type", "application/json")
+		_, err = rw.Write(errMsg)
+		if err != nil {
+			zerolog.Ctx(ctx).Error().Stack().Err(err).Msg("failed.to.write.response")
+		}
+
+		return
+	}
+
+	err = r.processUpdate(ctx, &wg, update)
+	if err != nil {
+		zerolog.Ctx(ctx).Error().
+			Stack().Err(err).
+			Interface("update", update).
+			Msg("failed.to.process.update")
 	}
 	wg.Wait()
 }
