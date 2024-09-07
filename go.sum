@@ -787,6 +787,8 @@ github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsT
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/teadove/teasutils v0.1.5 h1:7w/lF1MLyRVlFfaXf1ymz9UZ8YzEOeEPkav8FMa7KzU=
 github.com/teadove/teasutils v0.1.5/go.mod h1:0Hm+QncYBpXmRc1cqaQYEV47cLfwi7cmNVSDy4KWYe4=
+github.com/teadove/teasutils v0.1.6 h1:5DhFejExF2zRO1JJSrT09jZ/ax5IBWPoxYyIWr6MUw0=
+github.com/teadove/teasutils v0.1.6/go.mod h1:Q9LG18PlQeMjuNTdVzNunmzIZL1W4WM9mUF9SwgvELc=
 github.com/tidwall/gjson v1.14.2/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
 github.com/tidwall/gjson v1.17.3 h1:bwWLZU7icoKRG+C+0PNwIKC6FCJO/Q3p2pZvuP0jN94=
 github.com/tidwall/gjson v1.17.3/go.mod h1:/wbyibRr2FHMks5tjHJ5F8dMZh3AcwJEMf5vlfC0lxk=
