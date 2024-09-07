@@ -2,6 +2,7 @@ package tg_service
 
 import (
 	"context"
+	"net/http"
 	"sync"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -10,7 +11,7 @@ import (
 	"github.com/teadove/teasutils/utils/must_utils"
 )
 
-func (r *Service) Run(ctx context.Context) {
+func (r *Service) PollerRun(ctx context.Context) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := r.bot.GetUpdatesChan(u)
@@ -27,6 +28,21 @@ func (r *Service) Run(ctx context.Context) {
 		)(ctx)
 	}
 
+	wg.Wait()
+}
+
+func (r *Service) ProcessWebhook(rw http.ResponseWriter, req *http.Request) {
+	ctx := logger_utils.AddLoggerToCtx(req.Context())
+
+	var wg sync.WaitGroup
+	for update := range r.bot.ListenForWebhookRespReqFormat(rw, req) {
+		go must_utils.DoOrLog(
+			func(ctx context.Context) error {
+				return r.processUpdate(ctx, &wg, &update)
+			},
+			"error.during.update.process",
+		)(ctx)
+	}
 	wg.Wait()
 }
 

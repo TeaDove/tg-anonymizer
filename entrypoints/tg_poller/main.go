@@ -16,5 +16,5 @@ func main() {
 		must_utils.FancyPanic(ctx, errors.Wrap(err, "failed to make service"))
 	}
 
-	tgService.Run(ctx)
+	tgService.PollerRun(ctx)
 }
