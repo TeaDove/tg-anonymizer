@@ -27,3 +27,4 @@ go.work.sum
 .env
 
 .ydb_sa_keys.json
+.deploy.zip

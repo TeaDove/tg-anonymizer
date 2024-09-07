@@ -11,3 +11,6 @@ test:
 
 update-all:
 	$(GO) get -u ./...
+
+zip:
+	rm .deploy.zip ; zip -r .deploy.zip **
