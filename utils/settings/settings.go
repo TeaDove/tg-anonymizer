@@ -26,8 +26,8 @@ type sqs struct {
 }
 
 type ydb struct {
-	FromInside bool   `env:"ydb_from_inside" json:"ydbFromInside" endDefault:"true"`
-	Url        string `env:"ydb_url"         json:"ydbUrl"                          envDefault:"grpcs://ydb.serverless.yandexcloud.net:2135/ru-central1/b1g15gt835j53bc2hir0/etnkid49o4gf60c6o88j"`
+	FromInside bool   `env:"from_inside" json:"fromInside" endDefault:"true"`
+	Url        string `env:"url"         json:"url"                          envDefault:"grpcs://ydb.serverless.yandexcloud.net:2135/ru-central1/b1g15gt835j53bc2hir0/etnkid49o4gf60c6o88j"`
 }
 
 type tg struct {
