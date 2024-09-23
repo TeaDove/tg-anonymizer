@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"tg-anonymizer/repositories/user_chat_repository"
 	"tg-anonymizer/suppliers/s3_supplier"
 	"tg-anonymizer/suppliers/sqs_supplier"
-
-	"tg-anonymizer/repositories/user_chat_repository"
 
 	"github.com/pkg/errors"
 

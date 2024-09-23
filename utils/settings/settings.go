@@ -8,7 +8,7 @@ import (
 )
 
 type yc struct {
-	FromEnv         bool   `env:"fromEnv"           json:"from_env"        envDefault:"false"`
+	FromEnv         bool   `env:"from_env"          json:"from_env"        envDefault:"false"`
 	AccessKeyId     string `env:"access_key_id"     json:"accessKeyId"`
 	SecretAccessKey string `env:"secret_access_key" json:"secretAccessKey"`
 

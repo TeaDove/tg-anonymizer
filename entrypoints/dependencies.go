@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"tg-anonymizer/infrastructure/aws_infrastructure"
-	"tg-anonymizer/suppliers/s3_supplier"
-	"tg-anonymizer/suppliers/sqs_supplier"
-
 	"tg-anonymizer/infrastructure/ydb_inrastructure"
 	"tg-anonymizer/repositories/user_chat_repository"
 	"tg-anonymizer/services/tg_service"
+	"tg-anonymizer/suppliers/s3_supplier"
+	"tg-anonymizer/suppliers/sqs_supplier"
 	"tg-anonymizer/utils/settings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"

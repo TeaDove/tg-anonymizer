@@ -3,9 +3,9 @@ package ydb_inrastructure
 import (
 	"context"
 
-	"github.com/rs/zerolog"
-
 	"tg-anonymizer/utils/settings"
+
+	"github.com/rs/zerolog"
 
 	ydb2 "github.com/ydb-platform/gorm-driver"
 	"gorm.io/gorm"
