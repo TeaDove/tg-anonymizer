@@ -83,6 +83,18 @@ func (r *Service) processUpdate(
 		zerolog.Ctx(ctx).Debug().Interface("update", update).Msg("tg.new.update")
 	}
 
+	if len(update.Message.Photo) != 0 {
+		if update.Message.Chat.Type == "private" {
+			wg.Add(1)
+			go must_utils.DoOrLogWithStacktrace(
+				func(ctx context.Context) error {
+					return r.handlePhotoPrivateMessage(ctx, wg, update)
+				},
+				"error.during.processing.photo.private.message",
+			)(ctx)
+		}
+	}
+
 	if update.Message != nil && update.Message.Chat != nil {
 
 		if update.Message.Chat.Type == "private" {

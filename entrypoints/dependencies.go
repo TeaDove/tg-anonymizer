@@ -3,6 +3,10 @@ package entrypoints
 import (
 	"context"
 
+	"tg-anonymizer/infrastructure/aws_infrastructure"
+	"tg-anonymizer/suppliers/s3_supplier"
+	"tg-anonymizer/suppliers/sqs_supplier"
+
 	"tg-anonymizer/infrastructure/ydb_inrastructure"
 	"tg-anonymizer/repositories/user_chat_repository"
 	"tg-anonymizer/services/tg_service"
@@ -14,7 +18,7 @@ import (
 )
 
 func MakeTgService(ctx context.Context) (*tg_service.Service, error) {
-	bot, err := tgbotapi.NewBotAPI(settings.Settings.TgToken)
+	bot, err := tgbotapi.NewBotAPI(settings.Settings.Tg.Token)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run bot")
 	}
@@ -32,7 +36,22 @@ func MakeTgService(ctx context.Context) (*tg_service.Service, error) {
 		return nil, errors.Wrap(err, "failed to init user_to_chat_repository")
 	}
 
-	tgService, err := tg_service.NewService(ctx, bot, userToChatRepository)
+	awsConfig, err := aws_infrastructure.NewConfig(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init aws_config")
+	}
+
+	s3Supplier, err := s3_supplier.NewSupplier(ctx, &awsConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init s3_supplier")
+	}
+
+	sqsSupplier, err := sqs_supplier.NewSupplier(ctx, &awsConfig)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to init sqs_supplier")
+	}
+
+	tgService, err := tg_service.NewService(ctx, bot, userToChatRepository, s3Supplier, sqsSupplier)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to make service")
 	}

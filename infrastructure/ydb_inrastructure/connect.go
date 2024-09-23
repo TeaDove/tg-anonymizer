@@ -16,15 +16,15 @@ import (
 
 func GetGormConnect(ctx context.Context) (db *gorm.DB, err error) {
 	var dialector gorm.Dialector
-	if settings.Settings.YdbFromInside {
+	if settings.Settings.YDB.FromInside {
 		dialector = ydb2.Open(
-			settings.Settings.YdbUrl,
+			settings.Settings.YDB.Url,
 			ydb2.With(yc.WithInternalCA()),
 			ydb2.With(yc.WithMetadataCredentials()),
 		)
 	} else {
 		dialector = ydb2.Open(
-			settings.Settings.YdbUrl,
+			settings.Settings.YDB.Url,
 			ydb2.With(yc.WithInternalCA()),
 			ydb2.With(yc.WithServiceAccountKeyFileCredentials(".ydb_sa_keys.json")),
 		)

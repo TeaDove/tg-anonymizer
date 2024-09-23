@@ -205,6 +205,62 @@ func (r *Service) handlePrivateMessageForward(ctx context.Context, update *tgbot
 	return nil
 }
 
+func (r *Service) handlePrivateMessageSendMessage(
+	ctx context.Context,
+	update *tgbotapi.Update,
+) error {
+	if len(update.Message.Text) <= 5 {
+		err := r.reply(update, "Text required")
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+	}
+
+	err := r.sqsSupplier.SendMessage(ctx, update.Message.Text[5:])
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	err = r.reply(update, "Message sent")
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
+func (r *Service) handlePrivateMessageReceiveMessage(
+	ctx context.Context,
+	update *tgbotapi.Update,
+) error {
+	messages, err := r.sqsSupplier.ReceiveAndDeleteMessage(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to receive message")
+	}
+
+	if len(messages) == 0 {
+		err = r.reply(update, "No messages in queue")
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
+		}
+
+		return nil
+	}
+
+	text := strings.Builder{}
+	text.WriteString(fmt.Sprintf("Messages: %d\n\n", len(messages)))
+	for idx, message := range messages {
+		text.WriteString(fmt.Sprintf("%d - %s\n", idx+1, message))
+	}
+
+	err = r.reply(update, text.String())
+	if err != nil {
+		return errors.Wrap(err, "failed to send message")
+	}
+
+	return nil
+}
+
 func (r *Service) handlePrivateMessage(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -217,7 +273,12 @@ func (r *Service) handlePrivateMessage(
 		return r.handlePrivateMessageCommandReset(ctx, update)
 	case "start":
 		return r.handlePrivateMessageCommandStart(ctx, update)
+	case "send":
+		return r.handlePrivateMessageSendMessage(ctx, update)
+	case "receive":
+		return r.handlePrivateMessageReceiveMessage(ctx, update)
 	default:
-		return r.handlePrivateMessageForward(ctx, update)
+		return nil
+		// return r.handlePrivateMessageForward(ctx, update)
 	}
 }

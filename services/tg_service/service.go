@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"tg-anonymizer/suppliers/s3_supplier"
+	"tg-anonymizer/suppliers/sqs_supplier"
+
 	"tg-anonymizer/repositories/user_chat_repository"
 
 	"github.com/pkg/errors"
@@ -12,6 +15,8 @@ import (
 )
 
 type Service struct {
+	s3Supplier           *s3_supplier.Supplier
+	sqsSupplier          *sqs_supplier.Supplier
 	bot                  *tgbotapi.BotAPI
 	userToChatRepository *user_chat_repository.Repository
 }
@@ -20,8 +25,15 @@ func NewService(
 	ctx context.Context,
 	bot *tgbotapi.BotAPI,
 	userToChatRepository *user_chat_repository.Repository,
+	s3Supplier *s3_supplier.Supplier,
+	sqsSupplier *sqs_supplier.Supplier,
 ) (*Service, error) {
-	return &Service{bot: bot, userToChatRepository: userToChatRepository}, nil
+	return &Service{
+		bot:                  bot,
+		userToChatRepository: userToChatRepository,
+		s3Supplier:           s3Supplier,
+		sqsSupplier:          sqsSupplier,
+	}, nil
 }
 
 func (r *Service) reply(update *tgbotapi.Update, format string, a ...any) error {
