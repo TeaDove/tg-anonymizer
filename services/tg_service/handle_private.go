@@ -278,7 +278,6 @@ func (r *Service) handlePrivateMessage(
 	case "receive":
 		return r.handlePrivateMessageReceiveMessage(ctx, update)
 	default:
-		return nil
-		// return r.handlePrivateMessageForward(ctx, update)
+		return r.handlePrivateMessageForward(ctx, update)
 	}
 }
