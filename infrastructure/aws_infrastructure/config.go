@@ -38,19 +38,26 @@ func NewConfig(ctx context.Context) (aws.Config, error) {
 		},
 	)
 
-	cfg, err := config.LoadDefaultConfig(
-		ctx,
+	options := []func(*config.LoadOptions) error{
 		config.WithEndpointResolverWithOptions(customResolver),
 		config.WithRegion(settings.Settings.YC.Region),
-		config.WithCredentialsProvider(
+	}
+	if !settings.Settings.YC.FromEnv {
+		if settings.Settings.YC.AccessKeyId == "" || settings.Settings.YC.SecretAccessKey == "" {
+			return aws.Config{}, errors.New("missing YC access key or secret access key")
+		}
+
+		options = append(options, config.WithCredentialsProvider(
 			&credentials.StaticCredentialsProvider{
 				Value: aws.Credentials{
 					AccessKeyID:     settings.Settings.YC.AccessKeyId,
 					SecretAccessKey: settings.Settings.YC.SecretAccessKey,
 				},
 			},
-		),
-	)
+		))
+	}
+
+	cfg, err := config.LoadDefaultConfig(ctx, options...)
 	if err != nil {
 		return aws.Config{}, errors.Wrap(err, "failed to load default config")
 	}

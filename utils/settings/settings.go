@@ -8,8 +8,9 @@ import (
 )
 
 type yc struct {
-	AccessKeyId     string `env:"access_key_id,required"     json:"accessKeyId"`
-	SecretAccessKey string `env:"secret_access_key,required" json:"secretAccessKey"`
+	FromEnv         bool   `env:"fromEnv"           json:"from_env"        envDefault:"false"`
+	AccessKeyId     string `env:"access_key_id"     json:"accessKeyId"`
+	SecretAccessKey string `env:"secret_access_key" json:"secretAccessKey"`
 
 	PartitionId string `env:"partition_id" json:"partitionId" envDefault:"yc"`
 	Region      string `env:"region"       json:"region"      envDefault:"ru-central1"`
