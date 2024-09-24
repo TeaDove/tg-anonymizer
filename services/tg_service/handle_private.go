@@ -158,15 +158,14 @@ func (r *Service) forward(update *tgbotapi.Update, chatId int64) error {
 		return nil
 	}
 
-	if update.Message.Photo != nil {
-		for _, photo := range update.Message.Photo {
-			msg := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(photo.FileID))
-			msg.Caption = update.Message.Caption
+	if len(update.Message.Photo) != 0 {
+		photo := update.Message.Photo[len(update.Message.Photo)-1]
+		msg := tgbotapi.NewPhoto(chatId, tgbotapi.FileID(photo.FileID))
+		msg.Caption = update.Message.Caption
 
-			_, err = r.bot.Send(msg)
-			if err != nil {
-				return errors.Wrap(err, "failed to send message")
-			}
+		_, err = r.bot.Send(msg)
+		if err != nil {
+			return errors.Wrap(err, "failed to send message")
 		}
 
 		return nil
