@@ -22,7 +22,7 @@ type s3 struct {
 }
 
 type sqs struct {
-	Url string `env:"queue" json:"queue" envDefault:"https://message-queue.api.cloud.yandex.net/b1g15gt835j53bc2hir0/dj6000000022nftk037s/prod-tg-anonymizer-queue"`
+	Url string `env:"url" json:"url" envDefault:"https://message-queue.api.cloud.yandex.net/b1g15gt835j53bc2hir0/dj6000000022nftk037s/prod-tg-anonymizer-queue"`
 }
 
 type ydb struct {
